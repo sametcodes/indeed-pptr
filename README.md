@@ -1,19 +1,21 @@
+> For educational purposes only.
+
 A script that runs on a headless browser to fetch jobs from indeed.com.
 
-## install & run
+## Install & run
 
 ```bash
 npm i
 node index.js
 ```
 
-## usage
+## Usage
 
 It has only one endpoint: `/:location/:page`. After providing the location and page parameters, the service will return `total`, `page` and `jobs` elements. According to the value of `total`, the page value can be increased to get more.
 
 For searching with other parameters such as posting date or job type, they should be added as URL parameters.
 
-## some parameters
+## Some parameters
 
 | Query parameter | Desc | Example |
 | --------------- | --------------- | --------------- |
