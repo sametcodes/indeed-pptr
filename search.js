@@ -10,6 +10,7 @@ class Search{
         this.processing = false;
     }
     buildParams = (params) => {
+        this.params = params;
         this.params_str = Object.entries(params).map(([key, val]) => `${key}=${val}`).join("&");
     }
     init = async () => {
@@ -32,16 +33,30 @@ class Search{
         this.processing = false;
         return this.domain;
     }
+    getTotalCountOfJobs = () => {
+        return this.page.evaluate(() => {
+            return Number(document.querySelector('#searchCount #searchCountPages').innerText.replace(/[^0-9 ]/g, "").trim("").replace(/1$/, "").replace(/^1/, "").trim(""));
+        })
+    }
     getJobs = async (page=1) => {
         this.processing = true;
-        this.buildParams({...this.params, start: (page - 1) * 10})
-        await this.page.goto(`https://${this.domain}/jobs?${this.params_str}`);
+        this.buildParams({...this.params, start: (page - 1) * 15})
+        await this.page.goto(`https://${this.domain}/jobs?${this.params_str}`, {waitUNtil: 'domcontentloaded'});
+        console.log(`https://${this.domain}/jobs?${this.params_str}`)
+        const total = await this.getTotalCountOfJobs();
+
+        if((page - 1) * 15 > total){
+            this.processing = false;
+            return { total, page, jobs: [] }
+        }
 
         const jobs_elements = await this.page.$$('#resultsCol #mosaic-provider-jobcards > a');
-        const job_elements_promise = jobs_elements.map(throat(5, job => this.getJobDetail(job)))
-        return Promise.all(job_elements_promise).finally(_ => {
-            this.processing = false;
-        })
+        const job_elements_promise = jobs_elements.map(job => this.getJobDetail(job))
+        const jobs = await Promise.all(job_elements_promise)
+
+        this.processing = false;
+
+        return { total, page, jobs }
     }
     getJobDetail = (job) => {
         const selectors = {

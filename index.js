@@ -16,26 +16,39 @@ app.use(async (req, res, next) => {
     next();
 })
 
-app.get('/:q/:l/:page', async (req, res) => {
+app.get('/:l/:page', async (req, res) => {
     const params = req.params;
+    const queries = req.query;
+
+    const query_params = {...params, ...queries}
 
     if(search === undefined){
-        search = new Search(page, params);
+        search = new Search(page, query_params);
         domain = await search.init();
     }
 
     if(search.params.l !== params.l){
-        search = new Search(page, params);
+        search = new Search(page, query_params);
         domain = await search.init();
     }
 
-    const jobs = await search.getJobs(params.page);
+    search.buildParams(query_params)
+    const jobs = await search.getJobs(Number(params.page));
     return res.json(jobs)
 })
 
 app.listen(port, async () => {
     const browser = await puppeteer.launch({
-        headless: true
+        headless: true,
+        args: [
+            '--disable-gpu',
+            '--disable-dev-shm-usage',
+            '--disable-setuid-sandbox',
+            '--no-first-run',
+            '--no-sandbox',
+            '--no-zygote',
+            `--user-data-dir=${process.cwd()}/browser_profile`,
+        ]
     });
 
     const pages = await browser.pages();
