@@ -38,6 +38,7 @@ app.get('/:l/:page', async (req, res) => {
 })
 
 app.listen(port, async () => {
+    console.log(`The service runs on http://localhost:${port}`)
     const browser = await puppeteer.launch({
         headless: true,
         args: [
